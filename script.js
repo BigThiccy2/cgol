@@ -162,3 +162,24 @@ canvas.addEventListener('mouseleave', function() {
 // Initial setup
 initializeGrid();
 drawGrid();
+
+function updateGrid() {
+    const nextGrid = Array.from({ length: numRows }, () =>
+        Array.from({ length: numCols }, () => 0)
+    );
+    for (let r = 0; r < numRows; r++) {
+        for (let c = 0; c < numCols; c++) {
+            const liveNeighbors = countLiveNeighbors(r, c);
+            if (grid[r][c] === 1) {
+                if (liveNeighbors === 2 || liveNeighbors === 3) {
+                    nextGrid[r][c] = 1;
+                }
+            } else {
+                if (liveNeighbors === 3) {
+                    nextGrid[r][c] = 1;
+                }
+            }
+        }
+    }
+    grid = nextGrid;
+}
