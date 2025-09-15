@@ -183,3 +183,57 @@ function updateGrid() {
     }
     grid = nextGrid;
 }
+
+
+
+canvas.addEventListener('mousemove', function(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const col = Math.floor(x / cellSize);
+    const row = Math.floor(y / cellSize);
+
+    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
+        previewCell = { row, col };
+        if (isMouseDown) {
+            // Toggle cell state while dragging
+            if (eraseMode) {
+                grid[row][col] = 0;
+            } else {
+                grid[row][col] = 1;
+            }
+        }
+    } else {
+        previewCell = null;
+    }
+    drawGrid();
+});
+
+let eraseMode = false;
+
+canvas.addEventListener('mousedown', function(event) {
+    isMouseDown = true;
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const col = Math.floor(x / cellSize);
+    const row = Math.floor(y / cellSize);
+
+    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
+        eraseMode = grid[row][col] === 1; // If cell is alive, erase; else, draw
+        grid[row][col] = eraseMode ? 0 : 1;
+        previewCell = { row, col };
+        drawGrid();
+    }
+});
+
+canvas.addEventListener('mouseup', function() {
+    isMouseDown = false;
+});
+
+canvas.addEventListener('mouseleave', function() {
+    previewCell = null;
+    isMouseDown = false;
+    drawGrid();
+});
+
