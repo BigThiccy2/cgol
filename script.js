@@ -1,4 +1,3 @@
-// script.js
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const cellSize = 10;
@@ -8,16 +7,19 @@ const numRows = canvas.height / cellSize;
 let grid;
 let animationFrameId;
 let isRunning = false;
+let speed = 200; // Delay in ms between frames (increase for slower speed)
+let previewCell = null;
+let isMouseDown = false;
 
 function initializeGrid() {
     grid = Array.from({ length: numRows }, () =>
         Array.from({ length: numCols }, () => 0)
     );
-    // You can add random initialization here or a specific pattern
 }
 
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "black";
     for (let r = 0; r < numRows; r++) {
         for (let c = 0; c < numCols; c++) {
             if (grid[r][c] === 1) {
@@ -25,16 +27,23 @@ function drawGrid() {
             }
         }
     }
+    // Draw preview cell if mouse is over canvas
+    if (previewCell) {
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = "blue";
+        ctx.fillRect(previewCell.col * cellSize, previewCell.row * cellSize, cellSize, cellSize);
+        ctx.restore();
+    }
 }
 
 function countLiveNeighbors(r, c) {
     let count = 0;
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
-            if (i === 0 && j === 0) continue; // Skip the cell itself
+            if (i === 0 && j === 0) continue;
             const neighborR = r + i;
             const neighborC = c + j;
-
             if (
                 neighborR >= 0 && neighborR < numRows &&
                 neighborC >= 0 && neighborC < numCols &&
@@ -48,17 +57,17 @@ function countLiveNeighbors(r, c) {
 }
 
 function updateGrid() {
-    const nextGrid = JSON.parse(JSON.stringify(grid)); // Deep copy
+    const nextGrid = JSON.parse(JSON.stringify(grid));
     for (let r = 0; r < numRows; r++) {
         for (let c = 0; c < numCols; c++) {
             const liveNeighbors = countLiveNeighbors(r, c);
-            if (grid[r][c] === 1) { // Live cell
+            if (grid[r][c] === 1) {
                 if (liveNeighbors < 2 || liveNeighbors > 3) {
-                    nextGrid[r][c] = 0; // Dies
+                    nextGrid[r][c] = 0;
                 }
-            } else { // Dead cell
+            } else {
                 if (liveNeighbors === 3) {
-                    nextGrid[r][c] = 1; // Becomes alive
+                    nextGrid[r][c] = 1;
                 }
             }
         }
@@ -70,11 +79,11 @@ function gameLoop() {
     if (isRunning) {
         updateGrid();
         drawGrid();
-        animationFrameId = requestAnimationFrame(gameLoop);
+        animationFrameId = setTimeout(gameLoop, speed);
     }
 }
 
-// Event Listeners for buttons
+// Button event listeners
 document.getElementById('startButton').addEventListener('click', () => {
     if (!isRunning) {
         isRunning = true;
@@ -100,103 +109,14 @@ document.getElementById('randomButton').addEventListener('click', () => {
     initializeGrid();
     for (let r = 0; r < numRows; r++) {
         for (let c = 0; c < numCols; c++) {
-            grid[r][c] = Math.random() > 0.7 ? 1 : 0; // Randomly set initial state
+            grid[r][c] = Math.random() > 0.7 ? 1 : 0;
         }
     }
     drawGrid();
 });
 
-// Initial setup
-initializeGrid();
-drawGrid();
-
-let speed = 200; // Delay in ms between frames (increase for slower speed)
-
-function gameLoop() {
-    if (isRunning) {
-        updateGrid();
-        drawGrid();
-        animationFrameId = setTimeout(gameLoop, speed);
-    }
-}
-
-canvas.addEventListener('click', function(event) {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const col = Math.floor(x / cellSize);
-    const row = Math.floor(y / cellSize);
-
-    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
-        grid[row][col] = 1; // Set cell to alive
-        drawGrid();
-    }
-});
-
-// ...existing code...
-
-let previewCell = null;
-
-// Draw grid and preview cell
-function drawGrid() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let r = 0; r < numRows; r++) {
-        for (let c = 0; c < numCols; c++) {
-            if (grid[r][c] === 1) {
-                ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
-            }
-        }
-    }
-    // Draw preview cell if mouse is over canvas
-    if (previewCell) {
-        ctx.save();
-        ctx.globalAlpha = 0.5;
-        ctx.fillStyle = "blue";
-        ctx.fillRect(previewCell.col * cellSize, previewCell.row * cellSize, cellSize, cellSize);
-        ctx.restore();
-    }
-}
-
-// Mouse move: update preview cell
+// Mouse events for preview and drag-to-draw
 canvas.addEventListener('mousemove', function(event) {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const col = Math.floor(x / cellSize);
-    const row = Math.floor(y / cellSize);
-
-    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
-        previewCell = { row, col };
-    } else {
-        previewCell = null;
-    }
-    drawGrid();
-});
-
-// Mouse leave: remove preview
-canvas.addEventListener('mouseleave', function() {
-    previewCell = null;
-    drawGrid();
-});
-
-// ...existing code...
-
-// ...existing code...
-
-let isMouseDown = false;
-
-// Place cell on click and drag
-canvas.addEventListener('mousedown', function(event) {
-    isMouseDown = true;
-    placeCell(event);
-});
-
-canvas.addEventListener('mouseup', function() {
-    isMouseDown = false;
-});
-
-canvas.addEventListener('mousemove', function(event) {
-    // ...existing preview code...
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -206,7 +126,7 @@ canvas.addEventListener('mousemove', function(event) {
     if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
         previewCell = { row, col };
         if (isMouseDown) {
-            grid[row][col] = 1; // Set cell to alive while dragging
+            grid[row][col] = 1;
         }
     } else {
         previewCell = null;
@@ -214,8 +134,8 @@ canvas.addEventListener('mousemove', function(event) {
     drawGrid();
 });
 
-// Helper function to place cell
-function placeCell(event) {
+canvas.addEventListener('mousedown', function(event) {
+    isMouseDown = true;
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -224,15 +144,21 @@ function placeCell(event) {
 
     if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
         grid[row][col] = 1;
+        previewCell = { row, col };
         drawGrid();
     }
-}
+});
 
-// Remove preview on mouse leave and stop drawing
+canvas.addEventListener('mouseup', function() {
+    isMouseDown = false;
+});
+
 canvas.addEventListener('mouseleave', function() {
     previewCell = null;
     isMouseDown = false;
     drawGrid();
 });
 
-// ...existing code...
+// Initial setup
+initializeGrid();
+drawGrid();
