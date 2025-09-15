@@ -119,3 +119,16 @@ function gameLoop() {
         animationFrameId = setTimeout(gameLoop, speed);
     }
 }
+
+canvas.addEventListener('click', function(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const col = Math.floor(x / cellSize);
+    const row = Math.floor(y / cellSize);
+
+    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
+        grid[row][col] = 1; // Set cell to alive
+        drawGrid();
+    }
+});
