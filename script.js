@@ -10,6 +10,7 @@ let isRunning = false;
 let speed = 200; // Delay in ms between frames (increase for slower speed)
 let previewCell = null;
 let isMouseDown = false;
+let eraseMode = false;
 
 function initializeGrid() {
     grid = Array.from({ length: numRows }, () =>
@@ -57,13 +58,15 @@ function countLiveNeighbors(r, c) {
 }
 
 function updateGrid() {
-    const nextGrid = JSON.parse(JSON.stringify(grid));
+    const nextGrid = Array.from({ length: numRows }, () =>
+        Array.from({ length: numCols }, () => 0)
+    );
     for (let r = 0; r < numRows; r++) {
         for (let c = 0; c < numCols; c++) {
             const liveNeighbors = countLiveNeighbors(r, c);
             if (grid[r][c] === 1) {
-                if (liveNeighbors < 2 || liveNeighbors > 3) {
-                    nextGrid[r][c] = 0;
+                if (liveNeighbors === 2 || liveNeighbors === 3) {
+                    nextGrid[r][c] = 1;
                 }
             } else {
                 if (liveNeighbors === 3) {
@@ -115,102 +118,7 @@ document.getElementById('randomButton').addEventListener('click', () => {
     drawGrid();
 });
 
-// Mouse events for preview and drag-to-draw
-canvas.addEventListener('mousemove', function(event) {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const col = Math.floor(x / cellSize);
-    const row = Math.floor(y / cellSize);
-
-    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
-        previewCell = { row, col };
-        if (isMouseDown) {
-            grid[row][col] = 1;
-        }
-    } else {
-        previewCell = null;
-    }
-    drawGrid();
-});
-
-canvas.addEventListener('mousedown', function(event) {
-    isMouseDown = true;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const col = Math.floor(x / cellSize);
-    const row = Math.floor(y / cellSize);
-
-    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
-        grid[row][col] = 1;
-        previewCell = { row, col };
-        drawGrid();
-    }
-});
-
-canvas.addEventListener('mouseup', function() {
-    isMouseDown = false;
-});
-
-canvas.addEventListener('mouseleave', function() {
-    previewCell = null;
-    isMouseDown = false;
-    drawGrid();
-});
-
-// Initial setup
-initializeGrid();
-drawGrid();
-
-function updateGrid() {
-    const nextGrid = Array.from({ length: numRows }, () =>
-        Array.from({ length: numCols }, () => 0)
-    );
-    for (let r = 0; r < numRows; r++) {
-        for (let c = 0; c < numCols; c++) {
-            const liveNeighbors = countLiveNeighbors(r, c);
-            if (grid[r][c] === 1) {
-                if (liveNeighbors === 2 || liveNeighbors === 3) {
-                    nextGrid[r][c] = 1;
-                }
-            } else {
-                if (liveNeighbors === 3) {
-                    nextGrid[r][c] = 1;
-                }
-            }
-        }
-    }
-    grid = nextGrid;
-}
-
-
-
-canvas.addEventListener('mousemove', function(event) {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const col = Math.floor(x / cellSize);
-    const row = Math.floor(y / cellSize);
-
-    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
-        previewCell = { row, col };
-        if (isMouseDown) {
-            // Toggle cell state while dragging
-            if (eraseMode) {
-                grid[row][col] = 0;
-            } else {
-                grid[row][col] = 1;
-            }
-        }
-    } else {
-        previewCell = null;
-    }
-    drawGrid();
-});
-
-let eraseMode = false;
-
+// Mouse events for preview, draw, and erase
 canvas.addEventListener('mousedown', function(event) {
     isMouseDown = true;
     const rect = canvas.getBoundingClientRect();
@@ -227,6 +135,24 @@ canvas.addEventListener('mousedown', function(event) {
     }
 });
 
+canvas.addEventListener('mousemove', function(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const col = Math.floor(x / cellSize);
+    const row = Math.floor(y / cellSize);
+
+    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
+        previewCell = { row, col };
+        if (isMouseDown) {
+            grid[row][col] = eraseMode ? 0 : 1;
+        }
+    } else {
+        previewCell = null;
+    }
+    drawGrid();
+});
+
 canvas.addEventListener('mouseup', function() {
     isMouseDown = false;
 });
@@ -237,3 +163,6 @@ canvas.addEventListener('mouseleave', function() {
     drawGrid();
 });
 
+// Initial setup
+initializeGrid();
+drawGrid();
