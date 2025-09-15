@@ -84,19 +84,19 @@ document.getElementById('startButton').addEventListener('click', () => {
 
 document.getElementById('pauseButton').addEventListener('click', () => {
     isRunning = false;
-    cancelAnimationFrame(animationFrameId);
+    clearTimeout(animationFrameId);
 });
 
 document.getElementById('clearButton').addEventListener('click', () => {
     isRunning = false;
-    cancelAnimationFrame(animationFrameId);
+    clearTimeout(animationFrameId);
     initializeGrid();
     drawGrid();
 });
 
 document.getElementById('randomButton').addEventListener('click', () => {
     isRunning = false;
-    cancelAnimationFrame(animationFrameId);
+    clearTimeout(animationFrameId);
     initializeGrid();
     for (let r = 0; r < numRows; r++) {
         for (let c = 0; c < numCols; c++) {
@@ -109,3 +109,13 @@ document.getElementById('randomButton').addEventListener('click', () => {
 // Initial setup
 initializeGrid();
 drawGrid();
+
+let speed = 200; // Delay in ms between frames (increase for slower speed)
+
+function gameLoop() {
+    if (isRunning) {
+        updateGrid();
+        drawGrid();
+        animationFrameId = setTimeout(gameLoop, speed);
+    }
+}
