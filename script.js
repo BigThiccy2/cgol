@@ -132,3 +132,107 @@ canvas.addEventListener('click', function(event) {
         drawGrid();
     }
 });
+
+// ...existing code...
+
+let previewCell = null;
+
+// Draw grid and preview cell
+function drawGrid() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let r = 0; r < numRows; r++) {
+        for (let c = 0; c < numCols; c++) {
+            if (grid[r][c] === 1) {
+                ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+            }
+        }
+    }
+    // Draw preview cell if mouse is over canvas
+    if (previewCell) {
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = "blue";
+        ctx.fillRect(previewCell.col * cellSize, previewCell.row * cellSize, cellSize, cellSize);
+        ctx.restore();
+    }
+}
+
+// Mouse move: update preview cell
+canvas.addEventListener('mousemove', function(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const col = Math.floor(x / cellSize);
+    const row = Math.floor(y / cellSize);
+
+    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
+        previewCell = { row, col };
+    } else {
+        previewCell = null;
+    }
+    drawGrid();
+});
+
+// Mouse leave: remove preview
+canvas.addEventListener('mouseleave', function() {
+    previewCell = null;
+    drawGrid();
+});
+
+// ...existing code...
+
+// ...existing code...
+
+let isMouseDown = false;
+
+// Place cell on click and drag
+canvas.addEventListener('mousedown', function(event) {
+    isMouseDown = true;
+    placeCell(event);
+});
+
+canvas.addEventListener('mouseup', function() {
+    isMouseDown = false;
+});
+
+canvas.addEventListener('mousemove', function(event) {
+    // ...existing preview code...
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const col = Math.floor(x / cellSize);
+    const row = Math.floor(y / cellSize);
+
+    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
+        previewCell = { row, col };
+        if (isMouseDown) {
+            grid[row][col] = 1; // Set cell to alive while dragging
+        }
+    } else {
+        previewCell = null;
+    }
+    drawGrid();
+});
+
+// Helper function to place cell
+function placeCell(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const col = Math.floor(x / cellSize);
+    const row = Math.floor(y / cellSize);
+
+    if (row >= 0 && row < numRows && col >= 0 && col < numCols) {
+        grid[row][col] = 1;
+        drawGrid();
+    }
+}
+
+// Remove preview on mouse leave and stop drawing
+canvas.addEventListener('mouseleave', function() {
+    previewCell = null;
+    isMouseDown = false;
+    drawGrid();
+});
+
+// ...existing code...
